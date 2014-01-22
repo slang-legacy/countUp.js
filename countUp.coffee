@@ -29,7 +29,7 @@ class countUp
 
     startVal = Number startVal  
     endVal = Number endVal
-    @countDown = if startVal > endVal then true else false
+    @countDown = startVal > endVal # specify direction of count
     decimals = Math.max(0, decimals)
     @dec = Math.pow(10, decimals)
     @frameVal = startVal
