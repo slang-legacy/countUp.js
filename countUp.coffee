@@ -22,10 +22,10 @@ class countUp
     lastTime = 0
     vendors = ['webkit', 'moz','ms']
 
-    @doc = document.getElementById target  
+    @doc = document.getElementById target
     startVal = Number startVal  
     endVal = Number endVal
-    @countDown = if (startVal > endVal) then true else false
+    @countDown = if startVal > endVal then true else false
     decimals = Math.max(0, decimals)
     @dec = Math.pow(10, decimals)
     @duration = duration * 1000
@@ -64,7 +64,6 @@ class countUp
 
   count: (timestamp) ->
     @startTime = timestamp if @startTime is null
-    @timestamp = timestamp
     progress = timestamp - @startTime
       
     # to ease or not to ease is the question
@@ -84,7 +83,7 @@ class countUp
     # decimal
     @frameVal = Math.round(@frameVal * @dec) / @dec
 
-    # don't go past enVal since progress can exceed duration in last grame   
+    # don't go past enVal since progress can exceed duration in last grame
     if @countDown
       @frameVal = if (@framVal < endVal) then endVal else @frameVal
     else
@@ -102,7 +101,8 @@ class countUp
 
   start: (@callback) ->
     # make sure endVal is a number
-    requestAnimationFrame @count unless isNaN(endVal) and isNan(startVal) isnt null
+    unless isNaN(endVal) and isNan(startVal) isnt null
+      requestAnimationFrame @count
     else
       console.log('countUp error: startVal or endVal is not a number')
       @doc.innerHTML = '--'
@@ -112,7 +112,7 @@ class countUp
     cancelAnimationFrame @rAF
 
   reset: ->
-    cancelAnimationFrame @rAF
+    stop()
     @doc.innerHTML = @addCommas startVal.toFixed(decimals)
 
   resume: ->
@@ -121,8 +121,13 @@ class countUp
     @startVal = @framVal
     requestAnimationFrame @count
 
-  addCommas: (nStr='') ->
-    [x1, x2] = nStr.split('.')
+  ###*
+   * add commas to a number every 3 places
+   * @param {String|Number} nStr
+   * @return {String} the comma-delimited number
+  ###
+  addCommas: (nStr) ->
+    [x1, x2] = String(nStr).split('.')
     x2 = if x2? then "." + x2 else ''
 
     rgx = /(\d+)(\d{3})/
