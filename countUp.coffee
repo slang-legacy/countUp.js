@@ -6,41 +6,34 @@
  * @version 0.0.6
 ###
 class countUp
-  ###*
-   * [constructor description]
-   * @param {[type]} target Id of Html element where counting occurs.
-   * @param {[type]} startVal The value you want to start at.
-   * @param {[type]} endVal The value you want to arrive at.
-   * @param {[type]} decimals Number of decimal places in number, default 0.
-   * @param {[type]} duration Duration in seconds, default 2.
-   * @return {[type]} [description]
-  ###
-  constructor: (target, startVal, endVal, decimals, duration) ->
-    lastTime = 0
-    vendors = [
-      'webkit'
-      'moz'
-      'ms'
-    ]
+  useEasing: true
+  startTime: null
+  remaining: null
+  rAF: null
 
-    #toggle easing
-    @useEasing = true
+  ###*
+   * @param {String} target Id of Html element where counting occurs.
+   * @param {Number} startVal The value you want to start at.
+   * @param {Number} endVal The value you want to arrive at.
+   * @param {Integer} decimals=0 Number of decimal places in number.
+   * @param {Float} duration=2 Duration in seconds.
+  ###
+  constructor: (target, startVal, endVal, decimals=0, duration=2) ->
+    lastTime = 0
+    vendors = ['webkit', 'moz','ms']
 
     @doc = document.getElementById target  
     startVal = Number startVal  
     endVal = Number endVal
     @countDown = if (startVal > endVal) then true else false
-    decimals = Math.max(0, decimals or 0)
+    decimals = Math.max(0, decimals)
     @dec = Math.pow(10, decimals)
-    @duration = duration * 1000 or 2000
-    @startTime = null
-    @remaining = null
+    @duration = duration * 1000
     @frameVal = startVal
-    @rAF = null
 
     # make sure requestAnimationFrame and cancelAnimationFrame are defined
-    # polyfill for browsers without native support
-    # by Opera engineer Erik Möller
+    # polyfill for browsers without native support by Opera engineer Erik
+    # Möller
     while x < vendors.length and not window.requestAnimationFrame
       window.requestAnimationFrame = window[vendors[x] + 'RequestAnimationFrame']
       window.cancelAnimationFrame =
@@ -62,54 +55,52 @@ class countUp
       window.cancelAnimationFrame = (id) ->
         clearTimeout id
 
-    # Robert Penner's easeOutExpo
-    @easeOutExpo = (t, b, c, d) ->
-      c * (-Math.pow(2, -10 * t / d) + 1) * 1024 / 1023 + b
+  # format startVal on initialization
+  @doc.innerHTML = @addCommas startVal.toFixed(decimals)
 
-    @count = (timestamp) ->
-      @startTime = timestamp if @startTime is null
+  # Robert Penner's easeOutExpo
+  easeOutExpo: (t, b, c, d) ->
+    c * (-Math.pow(2, -10 * t / d) + 1) * 1024 / 1023 + b
 
-      @timestamp = timestamp
-
-      progress = timestamp - @startTime
-        
-      # to ease or not to ease is the question
-      if @useEasing
-        if @countDown
-          i = @easeOutExpo progress, 0, startVal - endVal, @duration
-          @frameVal = startVal - i
-        else
-          @frameVal = @easeOutExpo(progress, startVal, endVal - startVal, @duration)
-      else
-        if @countDown
-          i = (startVal - endVal) * (progress / @duration)
-          @frameVal = startVal - i
-        else
-          @frameVal = startVal + (endVal - startVal) * (progress / @duration)
-          
-      # decimal
-      @frameVal = Math.round(@frameVal * @dec) / @dec
-
-      # don't go past enVal since progress can exceed duration in last grame   
+  count: (timestamp) ->
+    @startTime = timestamp if @startTime is null
+    @timestamp = timestamp
+    progress = timestamp - @startTime
+      
+    # to ease or not to ease is the question
+    if @useEasing
       if @countDown
-        @frameVal = if (@framVal < endVal) then endVal else @frameVal
+        i = @easeOutExpo progress, 0, startVal - endVal, @duration
+        @frameVal = startVal - i
       else
-        @frameVal = if (@framVal > endVal) then endVal else @frameVal
-
-      # formate and print value
-      @doc.innerHTML = @addCommas @frameVal.toFixed(decimals)
-
-      # weather to continue
-      if progress < @duration
-        @rAF = requestAnimationFrame @count
+        @frameVal = @easeOutExpo(progress, startVal, endVal - startVal, @duration)
+    else
+      if @countDown
+        i = (startVal - endVal) * (progress / @duration)
+        @frameVal = startVal - i
       else
-        @callback() if @callback?
+        @frameVal = startVal + (endVal - startVal) * (progress / @duration)
+        
+    # decimal
+    @frameVal = Math.round(@frameVal * @dec) / @dec
 
-    # format startVal on initialization
-    @doc.innerHTML = @addCommas startVal.toFixed(decimals)
+    # don't go past enVal since progress can exceed duration in last grame   
+    if @countDown
+      @frameVal = if (@framVal < endVal) then endVal else @frameVal
+    else
+      @frameVal = if (@framVal > endVal) then endVal else @frameVal
 
-  start: (callback) ->
-    @callback = callback
+    # formate and print value
+    @doc.innerHTML = @addCommas @frameVal.toFixed(decimals)
+
+    # weather to continue
+    if progress < @duration
+      @rAF = requestAnimationFrame @count
+    else
+      @callback() if @callback?
+
+
+  start: (@callback) ->
     # make sure endVal is a number
     requestAnimationFrame @count unless isNaN(endVal) and isNan(startVal) isnt null
     else
