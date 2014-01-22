@@ -116,14 +116,14 @@ countUp = (target, startVal, endVal, decimals, duration) ->
       @doc.innerHTML = '--'
     false
 
-  @stop = () ->
+  @stop = ->
     cancelAnimationFrame @rAF
 
-  @reset = () ->
+  @reset = ->
     cancelAnimationFrame @rAF
     @doc.innerHTML = @addCommas startVal.toFixed(decimals)
 
-  @resume = () ->
+  @resume = ->
     @startTime = null
     @duration = @remaining
     @startVal = @framVal
