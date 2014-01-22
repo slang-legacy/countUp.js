@@ -1,113 +1,114 @@
+###*
+ * @author inorganik
+ * @example
+ * numAnim = new countUp "SomeElementYouWantToAnimate", 99.99, 2, 1.5
+ * numAnim.start()
+ * @version 0.0.6
 ###
-# 
-# countUp.js
-# by @inorganik
-# v 0.0.6
-#
-# Example:
-# numAnim = new countUp "SomeElementYouWantToAnimate", 99.99, 2, 1.5
-# numAnim.start()
-#
-###
+class countUp
+  ###*
+   * [constructor description]
+   * @param {[type]} target Id of Html element where counting occurs.
+   * @param {[type]} startVal The value you want to start at.
+   * @param {[type]} endVal The value you want to arrive at.
+   * @param {[type]} decimals Number of decimal places in number, default 0.
+   * @param {[type]} duration Duration in seconds, default 2.
+   * @return {[type]} [description]
+  ###
+  constructor: (target, startVal, endVal, decimals, duration) ->
+    lastTime = 0
+    vendors = [
+      'webkit'
+      'moz'
+      'ms'
+    ]
 
-# target = id of Html element where counting occurs
-# startVal = the value you want to start at
-# endVal = the value you want to arrive at
-# decimals = number of decimal places in number, default 0
-# duration = duration in seconds, default 2
+    #toggle easing
+    @useEasing = true
 
-countUp = (target, startVal, endVal, decimals, duration) ->
+    @doc = document.getElementById target  
+    startVal = Number startVal  
+    endVal = Number endVal
+    @countDown = if (startVal > endVal) then true else false
+    decimals = Math.max(0, decimals or 0)
+    @dec = Math.pow(10, decimals)
+    @duration = duration * 1000 or 2000
+    @startTime = null
+    @remaining = null
+    @frameVal = startVal
+    @rAF = null
 
-  lastTime = 0
-  vendors = [
-    'webkit'
-    'moz'
-    'ms'
-  ]
+    # make sure requestAnimationFrame and cancelAnimationFrame are defined
+    # polyfill for browsers without native support
+    # by Opera engineer Erik Möller
+    while x < vendors.length and not window.requestAnimationFrame
+      window.requestAnimationFrame = window[vendors[x] + 'RequestAnimationFrame']
+      window.cancelAnimationFrame =
+        window[vendors[x] + 'CancelAnimationFrame'] || window[vendors[x] + 'CancelRequestAnimationFrame']
 
-  #toggle easing
-  @useEasing = true
+    unless window.requestAnimationFrame
+      window.requestAnimationFrame = (callback, element) ->
+        currTime = new Date().getTime()
+        timeToCall = Math.max 0, 16 - (currTime - lastTime)
 
-  @doc = document.getElementById target  
-  startVal = Number startVal  
-  endVal = Number endVal
-  @countDown = if (startVal > endVal) then true else false
-  decimals = Math.max(0, decimals or 0)
-  @dec = Math.pow(10, decimals)
-  @duration = duration * 1000 or 2000
-  @startTime = null
-  @remaining = null
-  @frameVal = startVal
-  @rAF = null
+        id = window.setTimeout(->
+          callback currTime + timeToCall
+        , timeToCall)
 
-  # make sure requestAnimationFrame and cancelAnimationFrame are defined
-  # polyfill for browsers without native support
-  # by Opera engineer Erik Möller
-  while x < vendors.length and not window.requestAnimationFrame
-    window.requestAnimationFrame = window[vendors[x] + 'RequestAnimationFrame']
-    window.cancelAnimationFrame =
-      window[vendors[x] + 'CancelAnimationFrame'] || window[vendors[x] + 'CancelRequestAnimationFrame']
+        lastTime = currTime + timeToCall
+        id
 
-  unless window.requestAnimationFrame
-    window.requestAnimationFrame = (callback, element) ->
-      currTime = new Date().getTime()
-      timeToCall = Math.max 0, 16 - (currTime - lastTime)
+    unless window.cancelAnimationFrame
+      window.cancelAnimationFrame = (id) ->
+        clearTimeout id
 
-      id = window.setTimeout(->
-        callback currTime + timeToCall
-      , timeToCall)
+    # Robert Penner's easeOutExpo
+    @easeOutExpo = (t, b, c, d) ->
+      c * (-Math.pow(2, -10 * t / d) + 1) * 1024 / 1023 + b
 
-      lastTime = currTime + timeToCall
-      id
+    @count = (timestamp) ->
+      @startTime = timestamp if @startTime is null
 
-  unless window.cancelAnimationFrame
-    window.cancelAnimationFrame = (id) ->
-      clearTimeout id
+      @timestamp = timestamp
 
-  # Robert Penner's easeOutExpo
-  @easeOutExpo = (t, b, c, d) ->
-    c * (-Math.pow(2, -10 * t / d) + 1) * 1024 / 1023 + b
-
-  @count = (timestamp) ->
-    @startTime = timestamp if @startTime is null
-
-    @timestamp = timestamp
-
-    progress = timestamp - @startTime
-      
-    # to ease or not to ease is the question
-    if @useEasing
-      if @countDown
-        i = @easeOutExpo progress, 0, startVal - endVal, @duration
-        @frameVal = startVal - i
-      else
-        @frameVal = @easeOutExpo(progress, startVal, endVal - startVal, @duration)
-    else
-      if @countDown
-        i = (startVal - endVal) * (progress / @duration)
-        @frameVal = startVal - i
-      else
-        @frameVal = startVal + (endVal - startVal) * (progress / @duration)
+      progress = timestamp - @startTime
         
-    # decimal
-    @frameVal = Math.round(@frameVal * @dec) / @dec
+      # to ease or not to ease is the question
+      if @useEasing
+        if @countDown
+          i = @easeOutExpo progress, 0, startVal - endVal, @duration
+          @frameVal = startVal - i
+        else
+          @frameVal = @easeOutExpo(progress, startVal, endVal - startVal, @duration)
+      else
+        if @countDown
+          i = (startVal - endVal) * (progress / @duration)
+          @frameVal = startVal - i
+        else
+          @frameVal = startVal + (endVal - startVal) * (progress / @duration)
+          
+      # decimal
+      @frameVal = Math.round(@frameVal * @dec) / @dec
 
-    # don't go past enVal since progress can exceed duration in last grame   
-    if @countDown
-      @frameVal = if (@framVal < endVal) then endVal else @frameVal
-    else
-      @frameVal = if (@framVal > endVal) then endVal else @frameVal
+      # don't go past enVal since progress can exceed duration in last grame   
+      if @countDown
+        @frameVal = if (@framVal < endVal) then endVal else @frameVal
+      else
+        @frameVal = if (@framVal > endVal) then endVal else @frameVal
 
-    # formate and print value
-    @doc.innerHTML = @addCommas @frameVal.toFixed(decimals)
+      # formate and print value
+      @doc.innerHTML = @addCommas @frameVal.toFixed(decimals)
 
-    # weather to continue
-    if progress < @duration
-      @rAF = requestAnimationFrame @count
-    else
-      @callback() if @callback?
+      # weather to continue
+      if progress < @duration
+        @rAF = requestAnimationFrame @count
+      else
+        @callback() if @callback?
 
-  @start = (callback) ->
+    # format startVal on initialization
+    @doc.innerHTML = @addCommas startVal.toFixed(decimals)
+
+  start: (callback) ->
     @callback = callback
     # make sure endVal is a number
     requestAnimationFrame @count unless isNaN(endVal) and isNan(startVal) isnt null
@@ -116,20 +117,20 @@ countUp = (target, startVal, endVal, decimals, duration) ->
       @doc.innerHTML = '--'
     false
 
-  @stop = ->
+  stop: ->
     cancelAnimationFrame @rAF
 
-  @reset = ->
+  reset: ->
     cancelAnimationFrame @rAF
     @doc.innerHTML = @addCommas startVal.toFixed(decimals)
 
-  @resume = ->
+  resume: ->
     @startTime = null
     @duration = @remaining
     @startVal = @framVal
     requestAnimationFrame @count
 
-  @addCommas = (nStr) ->
+  addCommas: (nStr) ->
     nStr += ''
     x = nStr.split('.')
     x1 = x[0]
@@ -140,6 +141,3 @@ countUp = (target, startVal, endVal, decimals, duration) ->
       x1 = x1.replace(rgx, '$1' + ',' + '$2')
 
     x1 + x2
-
-  # format startVal on initialization
-  @doc.innerHTML = @addCommas startVal.toFixed(decimals)
