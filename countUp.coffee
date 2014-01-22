@@ -20,8 +20,8 @@ class countUp
    * @param {String} target The HTML element where counting occurs.
    * @param {Number} startVal The value you want to start at.
    * @param {Number} endVal The value you want to arrive at.
-   * @param {Integer} decimals=0 Number of decimal places in number.
-   * @param {Float} duration=2000 Duration in milliseconds.
+   * @param {Integer} [decimals=0] Number of decimal places in number.
+   * @param {Float} [duration=2000] Duration in milliseconds.
   ###
   constructor: (@target, startVal, endVal, decimals=0, @duration=2000) ->
     lastTime = 0
