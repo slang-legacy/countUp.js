@@ -1,7 +1,7 @@
 ###*
  * @author inorganik
  * @example
- * numAnim = new countUp(
+ * numAnim = new CountUp(
  *   document.getElementById("SomeElementYouWantToAnimate"),
  *   99.99,
  *   2,
@@ -10,7 +10,7 @@
  * numAnim.start();
  * @version 0.0.6
 ###
-class countUp
+class CountUp
   useEasing: true
   startTime: null
   remaining: null
@@ -107,7 +107,7 @@ class countUp
     unless isNaN(endVal) and isNan(startVal) isnt null
       requestAnimationFrame @count
     else
-      console.log('countUp error: startVal or endVal is not a number')
+      console.log('CountUp error: startVal or endVal is not a number')
       @target.innerHTML = '--'
     false
 
@@ -138,3 +138,5 @@ class countUp
       x1 = x1.replace(rgx, '$1' + ',' + '$2')
 
     x1 + x2
+
+module.exports = CountUp
