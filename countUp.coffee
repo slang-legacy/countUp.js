@@ -1,8 +1,13 @@
 ###*
  * @author inorganik
  * @example
- * numAnim = new countUp "SomeElementYouWantToAnimate", 99.99, 2, 1.5
- * numAnim.start()
+ * numAnim = new countUp(
+ *   document.getElementById("SomeElementYouWantToAnimate"),
+ *   99.99,
+ *   2,
+ *   1500
+ * );
+ * numAnim.start();
  * @version 0.0.6
 ###
 class countUp
@@ -12,23 +17,21 @@ class countUp
   rAF: null
 
   ###*
-   * @param {String} target Id of Html element where counting occurs.
+   * @param {String} target The HTML element where counting occurs.
    * @param {Number} startVal The value you want to start at.
    * @param {Number} endVal The value you want to arrive at.
    * @param {Integer} decimals=0 Number of decimal places in number.
-   * @param {Float} duration=2 Duration in seconds.
+   * @param {Float} duration=2000 Duration in milliseconds.
   ###
-  constructor: (target, startVal, endVal, decimals=0, duration=2) ->
+  constructor: (@target, startVal, endVal, decimals=0, @duration=2000) ->
     lastTime = 0
     vendors = ['webkit', 'moz','ms']
 
-    @doc = document.getElementById target
     startVal = Number startVal  
     endVal = Number endVal
     @countDown = if startVal > endVal then true else false
     decimals = Math.max(0, decimals)
     @dec = Math.pow(10, decimals)
-    @duration = duration * 1000
     @frameVal = startVal
 
     # make sure requestAnimationFrame and cancelAnimationFrame are defined
@@ -37,7 +40,7 @@ class countUp
     while x < vendors.length and not window.requestAnimationFrame
       window.requestAnimationFrame = window[vendors[x] + 'RequestAnimationFrame']
       window.cancelAnimationFrame =
-        window[vendors[x] + 'CancelAnimationFrame'] || window[vendors[x] + 'CancelRequestAnimationFrame']
+        window[vendors[x] + 'CancelAnimationFrame'] or window[vendors[x] + 'CancelRequestAnimationFrame']
 
     unless window.requestAnimationFrame
       window.requestAnimationFrame = (callback, element) ->
@@ -56,7 +59,7 @@ class countUp
         clearTimeout id
 
   # format startVal on initialization
-  @doc.innerHTML = @addCommas startVal.toFixed(decimals)
+  @target.innerHTML = @addCommas startVal.toFixed(decimals)
 
   # Robert Penner's easeOutExpo
   easeOutExpo: (t, b, c, d) ->
@@ -90,7 +93,7 @@ class countUp
       @frameVal = if (@framVal > endVal) then endVal else @frameVal
 
     # formate and print value
-    @doc.innerHTML = @addCommas @frameVal.toFixed(decimals)
+    @target.innerHTML = @addCommas @frameVal.toFixed(decimals)
 
     # weather to continue
     if progress < @duration
@@ -105,7 +108,7 @@ class countUp
       requestAnimationFrame @count
     else
       console.log('countUp error: startVal or endVal is not a number')
-      @doc.innerHTML = '--'
+      @target.innerHTML = '--'
     false
 
   stop: ->
@@ -113,7 +116,7 @@ class countUp
 
   reset: ->
     stop()
-    @doc.innerHTML = @addCommas startVal.toFixed(decimals)
+    @target.innerHTML = @addCommas startVal.toFixed(decimals)
 
   resume: ->
     @startTime = null
