@@ -121,13 +121,11 @@ class countUp
     @startVal = @framVal
     requestAnimationFrame @count
 
-  addCommas: (nStr) ->
-    nStr += ''
-    x = nStr.split('.')
-    x1 = x[0]
-    x2 = if x.length > 1 then "." + x[1] else ''
-    rgx = /(\d+)(\d{3})/
+  addCommas: (nStr='') ->
+    [x1, x2] = nStr.split('.')
+    x2 = if x2? then "." + x2 else ''
 
+    rgx = /(\d+)(\d{3})/
     while rgx.test(x1)
       x1 = x1.replace(rgx, '$1' + ',' + '$2')
 
